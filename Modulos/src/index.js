@@ -1,11 +1,23 @@
+// ============================================================
+// src/index.js - ARCHIVO DE INICIO del frontend (punto de entrada)
+// Aquí se conecta todo: servicios, utilidades, vistas y el
+// controlador principal que orquesta la aplicación.
+// También se configura la navegación entre pestañas.
+// ============================================================
+
 import { userService, taskService } from './services';
 import {
     lanzarNotificacion,
     limpiarNotificacion,
     clearTaskInput,
-    actualizarContadorInterfaz, 
+    actualizarContadorInterfaz,
     agregarFilaTabla,
-    limpiarTabla
+    limpiarTabla,
+    // Nuevas vistas importadas
+    initUsuarios,
+    renderUsuarios,
+    initAdmin,
+    renderKanban
 } from './ui';
 import { validateIdInput, handleApiError, handleGenericError } from './utils';
 import { applyFilters, getFiltrosFromDOM } from './filters/filterBar';
@@ -13,6 +25,43 @@ import { sortTasks, getSortConfigFromDOM } from './sorting/sortControls';
 import { showSuccess, showError, showInfo, showWarning } from './notification/notificationSystem';
 import { exportToJSON } from './export/exportTasks';
 
+// ============================================================
+// NAVEGACIÓN POR PESTAÑAS
+// Cambia la sección visible (#seccion-tareas / usuarios / administrador)
+// según la pestaña pulsada y refresca la vista activa.
+// ============================================================
+const tabsNav = document.getElementById('tabsNav');
+
+function cambiarPestana(seccion) {
+    // Ocultar todas las secciones y quitar "activo" de las pestañas.
+    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activo'));
+    document.querySelectorAll('.tab-boton').forEach(b => b.classList.remove('activo'));
+
+    // Mostrar la sección solicitada y marcar su pestaña.
+    const destino = document.getElementById(seccion);
+    if (destino) destino.classList.add('activo');
+
+    // Actualizar vistas según la pestaña activa.
+    if (seccion === 'seccion-usuarios') {
+        initUsuarios();            // renderiza + enlaza formulario
+    } else if (seccion === 'seccion-administrador') {
+        initAdmin();               // renderiza el kanban
+    }
+}
+
+// Escuchamos clics en la barra de navegación de pestañas.
+if (tabsNav) {
+    tabsNav.addEventListener('click', (e) => {
+        const btn = e.target.closest('.tab-boton'); // el botón pulsado
+        if (!btn) return;
+        cambiarPestana(btn.dataset.seccion);
+        // Resaltamos el botón activo.
+        document.querySelectorAll('.tab-boton').forEach(b => b.classList.remove('activo'));
+        btn.classList.add('activo');
+    });
+}
+
+// Referencias a elementos del formulario de tareas.
 const formBusqueda = document.getElementById('messageForm');
 const inputId = document.getElementById('userName');
 const inputTareaDesc = document.getElementById('userMessage');
@@ -28,8 +77,11 @@ function debounce(fn, delay = 400) {
 let todasLasTareas = [];
 
 function mostrarNotificacion(notif) {
+    // notif puede ser {texto, color, fondo} (legacy) o {texto, tipo} (nuevo)
     if (notif && notif.texto) {
-        lanzarNotificacion(notif.texto, notif.color, notif.fondo);
+        // Si tiene tipo nuevo, usamos la función tipada; si no, fallback a showError por color rojo.
+        const tipo = notif.tipo || (notif.color === 'red' ? 'error' : (notif.color === 'green' ? 'success' : 'info'));
+        lanzarNotificacion(notif.texto, tipo, 3500);
     }
 }   
 
@@ -139,6 +191,10 @@ async function cargarTareasIniciales() {
         } else {
             actualizarContadorInterfaz(0);
         }
+        // Si el kanban está visible, también refrescamos la sección administrador.
+        if (document.getElementById('seccion-administrador')?.classList.contains('activo')) {
+            renderKanban();
+        }
     } catch {
         console.log("Servidor vacío o desconectado. Esperando interacciones.");
     }
@@ -182,4 +238,9 @@ document.getElementById('btnExport')?.addEventListener('click', () => {
     showSuccess(`Se exportaron ${visibles.length} tareas.`);
 });
 
-document.addEventListener("DOMContentLoaded", cargarTareasIniciales);
+// Al cargar la página: iniciamos con datos y la navegación por pestañas.
+document.addEventListener("DOMContentLoaded", () => {
+    cargarTareasIniciales();   // carga tareas en la tabla
+    initUsuarios();           // inicializa la sección de usuarios
+    // NOTA: el kanban se inicializa cuando se abra su pestaña (cambiarPestana)
+});

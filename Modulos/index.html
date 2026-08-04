@@ -1,91 +1,150 @@
 <!DOCTYPE html>
+<!-- ============================================================
+     index.html - VISTA PRINCIPAL del frontend (vite)
+     Contiene la estructura con pestañas de navegación que muestran:
+       #seccion-tareas     -> formulario + tabla + filtros + sort + export
+       #seccion-usuarios   -> listado y creación de usuarios
+       #seccion-administrador -> tablero Kanban que organiza tareas
+     La lógica vive en src/index.js y los módulos de src/ui/.
+     ============================================================ -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grupo 3</title>
+    <title>Administrador de Tareas - Grupo 3</title>
+    <!-- Script principal (ES module) -->
     <script type="module" src="./src/index.js"></script>
+    <!-- Hojas de estilos globales -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Módulo de Gestión de Tareas ADSO</h1>
 
+        <!-- ENCABEZADO -->
+        <header class="header">
+            <h1>Administrador de Tareas ADSO</h1>
+            <!-- Navegación por pestañas: controla qué sección se muestra -->
+            <nav class="tabs" id="tabsNav">
+                <button class="tab-boton activo" data-seccion="seccion-tareas">Tareas</button>
+                <button class="tab-boton" data-seccion="seccion-usuarios">Usuarios</button>
+                <button class="tab-boton" data-seccion="seccion-administrador">Administrador</button>
+            </nav>
+        </header>
+
+        <!-- Mensajes de alerta / notificación global -->
         <div id="userNameError" class="alerta-mensaje"></div>
 
-        <form id="messageForm">
-            <div class="form-group">
-                <label for="userName">ID del Usuario:</label>
-                <input type="number" id="userName" placeholder="Ej: 1" min="1">
-            </div>
-            
-            <div class="form-group">
-                <label for="userMessage">Descripción de la Tarea:</label>
-                <input type="text" id="userMessage" placeholder="Escribe la descripción de la tarea...">
-            </div>
+        <!-- ============================================================
+             SECCIÓN 1: TAREAS
+             Permite crear, buscar, filtrar, ordenar, exportar y
+             gestionar (editar/cambiar estado/eliminar) las tareas.
+             ============================================================ -->
+        <section id="seccion-tareas" class="seccion activo">
+            <!-- Formulario para registrar una nueva tarea -->
+            <form id="messageForm">
+                <div class="form-group">
+                    <label for="userName">ID del Usuario:</label>
+                    <input type="number" id="userName" placeholder="Ej: 1" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="userMessage">Descripción de la Tarea:</label>
+                    <input type="text" id="userMessage" placeholder="Escribe la descripción de la tarea...">
+                </div>
+                <button type="submit">Guardar Tarea</button>
+            </form>
 
-            <button type="submit">Guardar Tarea</button>
-        </form>
-
-        <div class="toolbar">
-            <div class="toolbar-section">
-                <h3>Filtrar tareas</h3>
-                <div class="toolbar-row">
-                    <select id="filterEstado">
-                        <option value="">Todos los estados</option>
-                        <option value="Pendiente">Pendiente</option>
-                        <option value="En Proceso">En Proceso</option>
-                        <option value="Completada">Completada</option>
-                    </select>
-                    <input type="number" id="filterUsuario" placeholder="ID Usuario" min="1">
-                    <button id="btnApplyFilter" class="btn-filtrar">Aplicar Filtro</button>
-                    <button id="btnClearFilter" class="btn-limpiar">Limpiar</button>
+            <!-- Barra de herramientas: filtros, orden y exportar -->
+            <div class="toolbar">
+                <div class="toolbar-section">
+                    <h3>Filtrar tareas</h3>
+                    <div class="toolbar-row">
+                        <select id="filterEstado">
+                            <option value="">Todos los estados</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En Proceso">En Proceso</option>
+                            <option value="Completada">Completada</option>
+                        </select>
+                        <input type="number" id="filterUsuario" placeholder="ID Usuario" min="1">
+                        <button id="btnApplyFilter" class="btn-filtrar">Aplicar Filtro</button>
+                        <button id="btnClearFilter" class="btn-limpiar">Limpiar</button>
+                    </div>
+                </div>
+                <div class="toolbar-section">
+                    <h3>Ordenar tareas</h3>
+                    <div class="toolbar-row">
+                        <select id="sortCriterio">
+                            <option value="fecha">Fecha de creación</option>
+                            <option value="nombre">Nombre de la tarea</option>
+                            <option value="estado">Estado</option>
+                        </select>
+                        <select id="sortOrden">
+                            <option value="asc">Ascendente</option>
+                            <option value="desc">Descendente</option>
+                        </select>
+                        <button id="btnApplySort" class="btn-ordenar">Ordenar</button>
+                    </div>
+                </div>
+                <div class="toolbar-section">
+                    <button id="btnExport" class="btn-exportar">Exportar tareas visibles (JSON)</button>
                 </div>
             </div>
 
-            <div class="toolbar-section">
-                <h3>Ordenar tareas</h3>
-                <div class="toolbar-row">
-                    <select id="sortCriterio">
-                        <option value="fecha">Fecha de creación</option>
-                        <option value="nombre">Nombre de la tarea</option>
-                        <option value="estado">Estado</option>
-                    </select>
-                    <select id="sortOrden">
-                        <option value="asc">Ascendente</option>
-                        <option value="desc">Descendente</option>
-                    </select>
-                    <button id="btnApplySort" class="btn-ordenar">Ordenar</button>
-                </div>
+            <!-- Contador de tareas -->
+            <div class="meta-info"><span id="messageCount">0 tareas registradas</span></div>
+
+            <!-- Tabla de tareas -->
+            <table class="tabla-tareas">
+                <thead>
+                    <tr>
+                        <th>ID Usu.</th>
+                        <th>Nombre Usuario</th>
+                        <th>Descripción de la Tarea</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="messagesContainer">
+                    <tr id="emptyState">
+                        <td colspan="5" style="text-align: center; color: gray; padding: 20px;">
+                            No hay tareas registradas en el sistema.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ============================================================
+             SECCIÓN 2: USUARIOS
+             Listado de usuarios y formulario para crear uno nuevo.
+             ============================================================ -->
+        <section id="seccion-usuarios" class="seccion">
+            <div class="card">
+                <h2>Crear nuevo usuario</h2>
+                <form id="formUsuario">
+                    <div class="form-group"><input type="text" id="uNombre" placeholder="Nombre" required></div>
+                    <div class="form-group"><input type="email" id="uEmail" placeholder="Email" required></div>
+                    <div class="form-group"><input type="text" id="uTelefono" placeholder="Teléfono (opcional)"></div>
+                    <button type="submit" class="success">Crear usuario</button>
+                </form>
             </div>
-
-            <div class="toolbar-section">
-                <button id="btnExport" class="btn-exportar">Exportar tareas visibles (JSON)</button>
+            <div class="card">
+                <h2>Usuarios registrados</h2>
+                <div id="listaUsuarios" class="lista-usuarios"></div>
             </div>
-        </div>
+        </section>
 
-        <div class="meta-info">
-            <span id="messageCount">0 tareas registradas</span>
-        </div>
+        <!-- ============================================================
+             SECCIÓN 3: ADMINISTRADOR (Tablero Kanban)
+             Organiza las tareas en columnas según su estado.
+             ============================================================ -->
+        <section id="seccion-administrador" class="seccion">
+            <div class="card">
+                <h2>Tablero Kanban (por estado)</h2>
+                <p class="subtitle-card">Arrastra y suelta las tarjetas entre columnas para cambiar su estado.</p>
+                <div class="kanban" id="kanbanBoard"></div>
+            </div>
+        </section>
 
-        <table class="tabla-tareas">
-            <thead>
-                <tr>
-                    <th>ID Usu.</th>
-                    <th>Nombre Usuario</th>
-                    <th>Descripción de la Tarea</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="messagesContainer">
-                <tr id="emptyState">
-                    <td colspan="5" style="text-align: center; color: gray; padding: 20px;">
-                        No hay tareas registradas en el sistema.
-                    </td>
-                </tr>
-            </tbody>
-        </table>
     </div>
 </body>
 </html>
