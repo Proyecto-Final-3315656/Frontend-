@@ -9,9 +9,9 @@ import { API_URL } from '../api/config';
 
 export const userService = {
     // --- Obtener un usuario por su ID ---
-    // GET /users/:id  -> devuelve objeto { id, name, email, telefono }
+    // GET /usuarios/:id  -> devuelve objeto { id, nombre, email, telefono }
     async getUserById(id) {
-        const res = await fetch(`${API_URL}/users/${Number(id)}`);
+        const res = await fetch(`${API_URL}/usuarios/${Number(id)}`);
         if (!res.ok) throw new Error("No existe");
         return await res.json();
     },

@@ -112,8 +112,8 @@ if (inputId) {
         }
         try {
             const usuario = await userService.getUserById(id);
-            showInfo(`Usuario encontrado: ${usuario.name}`);
-            await cargarTareasDeUsuario(usuario.id, usuario.name);
+            showInfo(`Usuario encontrado: ${usuario.nombre}`);
+            await cargarTareasDeUsuario(usuario.id, usuario.nombre);
         } catch {
             lanzarNotificacion("Usuario no encontrado", "gray", "#f5f5f5");
             todasLasTareas = [];
@@ -163,7 +163,7 @@ if (formBusqueda) {
             const usuario = await userService.getUserById(idBuscado);
             const nuevaTarea = {
                 idUsuario: Number(usuario.id),
-                nombreUsuario: usuario.name,
+                nombreUsuario: usuario.nombre,
                 descripcion: tareaTexto,
                 estado: "Pendiente",
                 createdAt: new Date().toISOString()

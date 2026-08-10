@@ -112,7 +112,7 @@ async function handlerEliminar(id, filaHTML) {
                     const adminMod = await import('../ui/adminView');
                     adminMod.renderKanban();
                 }
-            } catch {
+            } catch {   
                 lanzarNotificacion("Error de red al intentar eliminar la tarea.", "red", "#fdedec");
             }
         }
