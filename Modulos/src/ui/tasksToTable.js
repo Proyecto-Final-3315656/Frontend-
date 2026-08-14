@@ -119,18 +119,24 @@ async function handlerEliminar(id, filaHTML) {
     );
 }
 
-// --- ELIMINAR USUARIO (cascada): borra el usuario y todas sus tareas ---
-// Aparece en la tabla de tareas: el usuario desaparece de la tabla, de la
-// lista de Usuarios y del Kanban en un solo clic (confirmado con modal).
+// --- ELIMINAR USUARIO (independiente): borra sus tareas UNA POR UNA y luego el usuario ---
+// Cada borrado es una función independiente: taskService.deleteTask() por cada
+// tarea y userService.deleteUser() al final. El backend NO borra en cascada.
 async function handlerEliminarUsuario(idUsuario, nombreUsuario) {
     // Modal bonito de confirmación (no el confirm() nativo).
     abrirModalConfirmar(
         'Eliminar usuario',
-        `¿Eliminar a "${nombreUsuario}" y TODAS sus tareas? Esta acción no se puede deshacer.`,
+        `¿Eliminar a "${nombreUsuario}" y TODAS sus tareas? Se borrarán una por una y luego el usuario. Esta acción no se puede deshacer.`,
         'danger',
         async () => {
             try {
-                // DELETE /usuarios/:id — el backend borra el usuario + sus tareas (cascada).
+                // 1. Borramos sus tareas una por una (función independiente).
+                const tareas = await taskService.getTasksByUserId(idUsuario);
+                for (const tarea of tareas) {
+                    await taskService.deleteTask(tarea.id);
+                }
+
+                // 2. Luego borramos el usuario (función independiente).
                 await userService.deleteUser(idUsuario);
                 lanzarNotificacion(`Usuario "${nombreUsuario}" y sus tareas eliminados.`, "green", "#e8f8f5");
 
@@ -146,7 +152,7 @@ async function handlerEliminarUsuario(idUsuario, nombreUsuario) {
                     adminMod.renderKanban();
                 }
             } catch {
-                lanzarNotificacion("Error de red al intentar eliminar el usuario.", "red", "#fdedec");
+                lanzarNotificacion("Error al eliminar el usuario o alguna de sus tareas.", "red", "#fdedec");
             }
         }
     );
