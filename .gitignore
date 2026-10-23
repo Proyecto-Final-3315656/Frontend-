@@ -1,0 +1,5 @@
+node_modules/
+Modulos/node_modules/
+Modulos/dist/
+.env
+Modulos/.env

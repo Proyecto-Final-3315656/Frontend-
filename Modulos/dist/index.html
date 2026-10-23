@@ -1,150 +1,76 @@
-<!DOCTYPE html>
-<!-- ============================================================
-     index.html - VISTA PRINCIPAL del frontend (vite)
-     Contiene la estructura con pestañas de navegación que muestran:
-       #seccion-tareas     -> formulario + tabla + filtros + sort + export
-       #seccion-usuarios   -> listado y creación de usuarios
-       #seccion-administrador -> tablero Kanban que organiza tareas
-     La lógica vive en src/index.js y los módulos de src/ui/.
-     ============================================================ -->
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administrador de Tareas - Grupo 3</title>
-    <!-- Script principal (ES module) -->
-    <!-- Hojas de estilos globales -->
-  <script type="module" crossorigin src="/assets/index-_hto7HuO.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DutPav9D.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrador de tareas</title>
+  <script type="module" crossorigin src="/assets/index-B3NiBs5g.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Dztzf7OH.css">
 </head>
 <body>
-    <div class="container">
+  <main class="container">
+    <section id="loginView" class="card auth-card" aria-labelledby="loginTitle">
+      <h1 id="loginTitle">Administrador de tareas</h1>
+      <p class="subtitle">Inicie sesión para continuar.</p>
+      <form id="loginForm">
+        <div class="form-group"><label for="loginEmail">Correo</label><input id="loginEmail" type="email" autocomplete="email" required></div>
+        <div class="form-group"><label for="loginPassword">Contraseña</label><input id="loginPassword" type="password" autocomplete="current-password" minlength="12" required></div>
+        <button type="submit">Iniciar sesión</button>
+      </form>
+    </section>
 
-        <!-- ENCABEZADO -->
-        <header class="header">
-            <h1>Administrador de Tareas ADSO</h1>
-            <!-- Navegación por pestañas: controla qué sección se muestra -->
-            <nav class="tabs" id="tabsNav">
-                <button class="tab-boton activo" data-seccion="seccion-tareas">Tareas</button>
-                <button class="tab-boton" data-seccion="seccion-usuarios">Usuarios</button>
-                <button class="tab-boton" data-seccion="seccion-administrador">Administrador</button>
-            </nav>
-        </header>
+    <section id="appView" hidden>
+      <header class="header">
+        <div><h1>Administrador de tareas</h1><p id="sessionInfo" class="subtitle"></p></div>
+        <button id="logoutButton" type="button" class="btn-limpiar">Cerrar sesión</button>
+      </header>
+      <nav class="tabs" role="tablist" aria-label="Navegación principal">
+        <button class="tab-boton activo" role="tab" aria-selected="true" data-view="tasksView">Tareas</button>
+        <button id="usersTab" class="tab-boton" role="tab" aria-selected="false" data-view="usersView" hidden>Usuarios</button>
+        <button class="tab-boton" role="tab" aria-selected="false" data-view="boardView">Tablero</button>
+      </nav>
+      <p id="notice" class="alerta-mensaje" role="status" aria-live="polite"></p>
 
-        <!-- Mensajes de alerta / notificación global -->
-        <div id="userNameError" class="alerta-mensaje"></div>
+      <section id="tasksView" class="seccion activo" role="tabpanel">
+        <div class="card"><h2>Nueva tarea</h2>
+          <form id="taskForm">
+            <div id="assigneeGroup" class="form-group" hidden><label for="taskUser">Asignar a</label><select id="taskUser"></select></div>
+            <div class="form-group"><label for="taskDescription">Descripción</label><input id="taskDescription" maxlength="1000" minlength="3" required></div>
+            <button type="submit">Guardar tarea</button>
+          </form>
+        </div>
+        <div class="toolbar">
+          <div class="toolbar-section"><h3>Buscar y filtrar</h3><div class="toolbar-row">
+            <label class="sr-only" for="searchFilter">Buscar</label><input id="searchFilter" type="search" placeholder="Buscar usuario o tarea">
+            <label class="sr-only" for="statusFilter">Estado</label><select id="statusFilter"><option value="">Todos los estados</option><option>Pendiente</option><option>En Proceso</option><option>Completada</option></select>
+            <label class="sr-only" for="userFilter">Usuario</label><select id="userFilter"><option value="">Todos los usuarios</option></select>
+          </div></div>
+          <div class="toolbar-section"><h3>Fecha y orden</h3><div class="toolbar-row">
+            <label class="sr-only" for="fromDate">Desde</label><input id="fromDate" type="date" title="Desde">
+            <label class="sr-only" for="toDate">Hasta</label><input id="toDate" type="date" title="Hasta">
+            <label class="sr-only" for="sortBy">Ordenar por</label><select id="sortBy"><option value="createdAt">Fecha</option><option value="nombreUsuario">Usuario</option><option value="descripcion">Descripción</option><option value="estado">Estado</option></select>
+            <label class="sr-only" for="sortDirection">Dirección</label><select id="sortDirection"><option value="desc">Reciente primero</option><option value="asc">Antiguo primero</option></select>
+          </div></div>
+          <div class="toolbar-section"><h3>Acciones</h3><div class="toolbar-row"><button id="clearFiltersButton" type="button" class="btn-limpiar">Limpiar filtros</button><button id="exportButton" type="button" class="btn-exportar">Exportar tareas visibles</button></div></div>
+        </div>
+        <p id="taskCount" class="meta-info"></p>
+        <div class="table-wrap"><table class="tabla-tareas"><thead><tr><th>Usuario</th><th>Descripción</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tasksBody"></tbody></table></div>
+      </section>
 
-        <!-- ============================================================
-             SECCIÓN 1: TAREAS
-             Permite crear, buscar, filtrar, ordenar, exportar y
-             gestionar (editar/cambiar estado/eliminar) las tareas.
-             ============================================================ -->
-        <section id="seccion-tareas" class="seccion activo">
-            <!-- Formulario para registrar una nueva tarea -->
-            <form id="messageForm">
-                <div class="form-group">
-                    <label for="userName">ID del Usuario:</label>
-                    <input type="number" id="userName" placeholder="Ej: 1" min="1">
-                </div>
-                <div class="form-group">
-                    <label for="userMessage">Descripción de la Tarea:</label>
-                    <input type="text" id="userMessage" placeholder="Escribe la descripción de la tarea...">
-                </div>
-                <button type="submit">Guardar Tarea</button>
-            </form>
+      <section id="usersView" class="seccion" role="tabpanel" hidden>
+        <div class="card"><h2>Crear usuario</h2><form id="userForm">
+          <div class="form-group"><label for="userName">Nombre</label><input id="userName" maxlength="100" minlength="3" required></div>
+          <div class="form-group"><label for="userEmail">Correo</label><input id="userEmail" type="email" maxlength="150" required></div>
+          <div class="form-group"><label for="userPhone">Teléfono</label><input id="userPhone" maxlength="50"></div>
+          <div class="form-group"><label for="userPassword">Contraseña temporal</label><input id="userPassword" type="password" minlength="12" maxlength="128" required></div>
+          <div class="form-group"><label for="userRole">Rol</label><select id="userRole"><option value="usuario">Usuario</option><option value="admin">Administrador</option></select></div>
+          <button type="submit">Crear usuario</button>
+        </form></div>
+        <div class="card"><h2>Usuarios registrados</h2><div class="table-wrap"><table class="tabla-usuarios"><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Acciones</th></tr></thead><tbody id="usersBody"></tbody></table></div></div>
+      </section>
 
-            <!-- Barra de herramientas: filtros, orden y exportar -->
-            <div class="toolbar">
-                <div class="toolbar-section">
-                    <h3>Filtrar tareas</h3>
-                    <div class="toolbar-row">
-                        <select id="filterEstado">
-                            <option value="">Todos los estados</option>
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="En Proceso">En Proceso</option>
-                            <option value="Completada">Completada</option>
-                        </select>
-                        <input type="number" id="filterUsuario" placeholder="ID Usuario" min="1">
-                        <button id="btnApplyFilter" class="btn-filtrar">Aplicar Filtro</button>
-                        <button id="btnClearFilter" class="btn-limpiar">Limpiar</button>
-                    </div>
-                </div>
-                <div class="toolbar-section">
-                    <h3>Ordenar tareas</h3>
-                    <div class="toolbar-row">
-                        <select id="sortCriterio">
-                            <option value="fecha">Fecha de creación</option>
-                            <option value="nombre">Nombre de la tarea</option>
-                            <option value="estado">Estado</option>
-                        </select>
-                        <select id="sortOrden">
-                            <option value="asc">Ascendente</option>
-                            <option value="desc">Descendente</option>
-                        </select>
-                        <button id="btnApplySort" class="btn-ordenar">Ordenar</button>
-                    </div>
-                </div>
-                <div class="toolbar-section">
-                    <button id="btnExport" class="btn-exportar">Exportar tareas visibles (JSON)</button>
-                </div>
-            </div>
-
-            <!-- Contador de tareas -->
-            <div class="meta-info"><span id="messageCount">0 tareas registradas</span></div>
-
-            <!-- Tabla de tareas -->
-            <table class="tabla-tareas">
-                <thead>
-                    <tr>
-                        <th>ID Usu.</th>
-                        <th>Nombre Usuario</th>
-                        <th>Descripción de la Tarea</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="messagesContainer">
-                    <tr id="emptyState">
-                        <td colspan="5" style="text-align: center; color: gray; padding: 20px;">
-                            No hay tareas registradas en el sistema.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-        <!-- ============================================================
-             SECCIÓN 2: USUARIOS
-             Listado de usuarios y formulario para crear uno nuevo.
-             ============================================================ -->
-        <section id="seccion-usuarios" class="seccion">
-            <div class="card">
-                <h2>Crear nuevo usuario</h2>
-                <form id="formUsuario">
-                    <div class="form-group"><input type="text" id="uNombre" placeholder="Nombre" required></div>
-                    <div class="form-group"><input type="email" id="uEmail" placeholder="Email" required></div>
-                    <div class="form-group"><input type="text" id="uTelefono" placeholder="Teléfono (opcional)"></div>
-                    <button type="submit" class="success">Crear usuario</button>
-                </form>
-            </div>
-            <div class="card">
-                <h2>Usuarios registrados</h2>
-                <div id="listaUsuarios" class="lista-usuarios"></div>
-            </div>
-        </section>
-
-        <!-- ============================================================
-             SECCIÓN 3: ADMINISTRADOR (Tablero Kanban)
-             Organiza las tareas en columnas según su estado.
-             ============================================================ -->
-        <section id="seccion-administrador" class="seccion">
-            <div class="card">
-                <h2>Tablero Kanban (por estado)</h2>
-                <p class="subtitle-card">Arrastra y suelta las tarjetas entre columnas para cambiar su estado.</p>
-                <div class="kanban" id="kanbanBoard"></div>
-            </div>
-        </section>
-
-    </div>
+      <section id="boardView" class="seccion" role="tabpanel" hidden><div class="card"><h2>Tablero Kanban</h2><p class="subtitle-card">Arrastre una tarea para cambiar su estado.</p><div id="board" class="kanban"></div></div></section>
+    </section>
+  </main>
 </body>
 </html>
