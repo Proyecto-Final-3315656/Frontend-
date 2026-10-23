@@ -2,6 +2,8 @@
 
 Cliente Vite para la API ubicada en `C:\backend\Backend`. La interfaz usa eventos `submit`, `click`, `change`, `dragstart` y `drop` para ejecutar el CRUD y el tablero Kanban.
 
+Requiere Node.js `20.19` o superior.
+
 ## Ejecución
 
 ```bash

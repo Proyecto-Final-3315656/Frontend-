@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from "vite";
 
 export default defineConfig({
   server: {
@@ -6,5 +6,5 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:3000'
     }
-  }
-})
+  },
+});

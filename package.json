@@ -22,8 +22,5 @@
   "bugs": {
     "url": "https://github.com/DeivyAcosta1523-pixel/Modularizacion2-/issues"
   },
-  "homepage": "https://github.com/DeivyAcosta1523-pixel/Modularizacion2-#readme",
-  "devDependencies": {
-    "vite": "^8.0.16"
-  }
+  "homepage": "https://github.com/DeivyAcosta1523-pixel/Modularizacion2-#readme"
 }
