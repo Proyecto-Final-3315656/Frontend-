@@ -9,6 +9,7 @@
 </head>
 <body>
   <main class="container">
+    <p id="authNotice" class="alerta-mensaje auth-notice" role="status" aria-live="polite"></p>
     <section id="loginView" class="card auth-card" aria-labelledby="loginTitle">
       <h1 id="loginTitle">Administrador de tareas</h1>
       <p class="subtitle">Inicie sesión para continuar.</p>
@@ -17,6 +18,31 @@
         <div class="form-group"><label for="loginPassword">Contraseña</label><input id="loginPassword" type="password" autocomplete="current-password" minlength="12" required></div>
         <button type="submit">Iniciar sesión</button>
       </form>
+      <button id="forgotPasswordLink" type="button" class="auth-link">¿Olvidaste tu contraseña?</button>
+    </section>
+
+    <section id="recoveryRequestView" class="card auth-card" aria-labelledby="recoveryRequestTitle" hidden>
+      <h1 id="recoveryRequestTitle">Recuperar contraseña</h1>
+      <p class="subtitle">Escriba su correo para generar un código temporal.</p>
+      <form id="recoveryRequestForm">
+        <div class="form-group"><label for="recoveryEmail">Correo</label><input id="recoveryEmail" type="email" autocomplete="email" required></div>
+        <button type="submit">Generar código</button>
+      </form>
+      <button id="backToLoginFromRequest" type="button" class="auth-link">Volver a iniciar sesión</button>
+    </section>
+
+    <section id="recoveryResetView" class="card auth-card" aria-labelledby="recoveryResetTitle" hidden>
+      <h1 id="recoveryResetTitle">Nueva contraseña</h1>
+      <p class="subtitle">Use el código temporal antes de que venza.</p>
+      <p id="recoveryCodeMessage" class="recovery-code" hidden></p>
+      <form id="recoveryResetForm">
+        <div class="form-group"><label for="recoveryResetEmail">Correo</label><input id="recoveryResetEmail" type="email" autocomplete="email" required></div>
+        <div class="form-group"><label for="recoveryCode">Código de 6 dígitos</label><input id="recoveryCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></div>
+        <div class="form-group"><label for="recoveryPassword">Nueva contraseña</label><input id="recoveryPassword" type="password" minlength="12" maxlength="128" autocomplete="new-password" required></div>
+        <div class="form-group"><label for="recoveryPasswordConfirmation">Confirmar contraseña</label><input id="recoveryPasswordConfirmation" type="password" minlength="12" maxlength="128" autocomplete="new-password" required></div>
+        <button type="submit">Cambiar contraseña</button>
+      </form>
+      <button id="backToLoginFromReset" type="button" class="auth-link">Volver a iniciar sesión</button>
     </section>
 
     <section id="appView" hidden>

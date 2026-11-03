@@ -234,6 +234,10 @@ button.danger {
 .alerta-mensaje[data-type="success"] { display: block; background: #14532d; color: #dcfce7; }
 .alerta-mensaje[data-type="info"] { display: block; background: #1e3a8a; color: #dbeafe; }
 .auth-card { max-width: 440px; margin: 70px auto; }
+.auth-notice { max-width: 440px; margin: 24px auto -52px; }
+.auth-link { background: transparent; color: var(--acento); box-shadow: none; padding: 0; text-decoration: underline; align-self: flex-start; }
+.auth-link:hover { background: transparent; box-shadow: none; color: #67e8f9; transform: none; }
+.recovery-code { background: #164e63; border: 1px solid var(--acento); border-radius: 9px; color: #cffafe; font-weight: 700; margin: 16px 0; padding: 12px; text-align: center; }
 .table-wrap { overflow-x: auto; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 

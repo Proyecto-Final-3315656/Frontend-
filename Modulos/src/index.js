@@ -6,7 +6,7 @@ let noticeTimer;
 let activeModal;
 
 function notice(message, type = "info") {
-  const element = $("notice");
+  const element = $(state.user ? "notice" : "authNotice");
   clearTimeout(noticeTimer);
   element.textContent = message;
   element.dataset.type = type;
@@ -16,10 +16,11 @@ function notice(message, type = "info") {
 
 function clearNotice() {
   clearTimeout(noticeTimer);
-  const element = $("notice");
-  element.textContent = "";
-  element.style.display = "none";
-  delete element.dataset.type;
+  [$("notice"), $("authNotice")].forEach((element) => {
+    element.textContent = "";
+    element.style.display = "none";
+    delete element.dataset.type;
+  });
 }
 
 function element(tag, text, className) {
@@ -333,12 +334,60 @@ async function startSession(user) {
   await refresh();
 }
 
+function showAuthView(viewId) {
+  ["loginView", "recoveryRequestView", "recoveryResetView"].forEach((id) => {
+    $(id).hidden = id !== viewId;
+  });
+  clearNotice();
+}
+
 $("loginForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const submit = event.submitter;
   submit.disabled = true;
   try { await startSession(await authService.login($("loginEmail").value, $("loginPassword").value)); }
   catch (error) { notice(error.message, "error"); }
+  finally { submit.disabled = false; }
+});
+
+$("forgotPasswordLink").addEventListener("click", () => showAuthView("recoveryRequestView"));
+$("backToLoginFromRequest").addEventListener("click", () => showAuthView("loginView"));
+$("backToLoginFromReset").addEventListener("click", () => showAuthView("loginView"));
+
+$("recoveryRequestForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const submit = event.submitter;
+  submit.disabled = true;
+  try {
+    const email = $("recoveryEmail").value.trim();
+    const result = await authService.forgotPassword(email);
+    $("recoveryResetEmail").value = email;
+    const codeMessage = $("recoveryCodeMessage");
+    codeMessage.hidden = !result.code;
+    codeMessage.textContent = result.code ? `Código temporal: ${result.code}. Vence en ${result.expiresInMinutes} minutos.` : "Si el correo está registrado, podrá continuar con el código generado.";
+    showAuthView("recoveryResetView");
+  } catch (error) { notice(error.message, "error"); }
+  finally { submit.disabled = false; }
+});
+
+$("recoveryResetForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const submit = event.submitter;
+  if ($("recoveryPassword").value !== $("recoveryPasswordConfirmation").value) {
+    notice("Las contraseñas no coinciden.", "error");
+    return;
+  }
+  submit.disabled = true;
+  try {
+    await authService.resetPassword(
+      $("recoveryResetEmail").value.trim(),
+      $("recoveryCode").value.trim(),
+      $("recoveryPassword").value
+    );
+    event.target.reset();
+    showAuthView("loginView");
+    notice("Contraseña actualizada. Ya puede iniciar sesión.", "success");
+  } catch (error) { notice(error.message, "error"); }
   finally { submit.disabled = false; }
 });
 
