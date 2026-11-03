@@ -9,20 +9,33 @@ export function setToken(value) {
 }
 
 export async function request(path, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const error = new Error(payload.message || "No se pudo completar la solicitud");
-    error.status = response.status;
-    error.details = payload.errors || [];
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error(payload.message || "No se pudo completar la solicitud");
+      error.status = response.status;
+      error.details = payload.errors || [];
+      throw error;
+    }
+    return payload.data;
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("La conexión con el servidor tardó demasiado. Verifique que el backend esté activo.");
+    }
     throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-  return payload.data;
 }
